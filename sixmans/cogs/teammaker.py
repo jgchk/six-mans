@@ -1,5 +1,7 @@
 import collections
+import operator
 import random
+import time
 from queue import Queue
 
 import discord
@@ -19,11 +21,11 @@ class Teammaker:
         self.game = None
         self.busy = False
 
-    @commands.command(pass_context=True)
-    async def queue_all(self, ctx, *members: discord.Member):
-        for member in members:
-            self.queue.put(member)
-        self.queue.put(ctx.message.author)
+    # @commands.command(pass_context=True)
+    # async def queue_all(self, ctx, *members: discord.Member):
+    #     for member in members:
+    #         self.queue.put(member)
+    #     self.queue.put(ctx.message.author)
 
     @commands.command(pass_context=True, aliases=["queue"])
     async def q(self, ctx):
@@ -57,6 +59,81 @@ class Teammaker:
     def queue_full(self):
         return self.queue.qsize() >= team_size
 
+    def check_vote_command(self, message):
+        if not message.content.startswith("{prefix}vote".format(prefix=self.bot.command_prefix)):
+            return False
+        if not len(message.mentions) == 1:
+            return False
+        return True
+
+    @commands.command()
+    async def voting(self):
+        if not self.queue_full():
+            await self.bot.say("Queue is not full.")
+            return
+        if self.busy:
+            await self.bot.say("Bot is busy. Please wait until picking is done.")
+            return
+        self.busy = True
+        self.create_game()
+
+        await self.bot.say(
+            "Captain voting initiated. Use {prefix}vote [user] to vote for a captain (cannot be yourself).".format(
+                prefix=self.bot.command_prefix))
+        await self.bot.say("Available: {}".format(", ".join([player.display_name for player in self.game.players])))
+
+        votes = {}
+        timeout = 1
+        end_time = time.time() + timeout
+        while len(votes) < team_size and time.time() < end_time:
+            msg = await self.bot.wait_for_message(timeout=1, check=self.check_vote_command)
+            if not msg:
+                continue
+            if msg.author not in self.game.players:
+                return
+
+            vote = msg.mentions[0]
+            if vote == msg.author:
+                await self.bot.say("Cannot vote for yourself.")
+            elif vote in self.game.players:
+                votes[msg.author] = msg.mentions[0]
+                await self.bot.say("Vote added for {}.".format(vote.display_name))
+            else:
+                await self.bot.say("{} not available to pick.".format(vote.display_name))
+        if len(votes) < team_size:
+            await self.bot.say("Timed out.")
+            msg = ""
+            for player in self.game.players:
+                if player not in votes:
+                    vote = player
+                    while vote == player:
+                        vote = random.choice(tuple(self.game.players))
+                    votes[player] = vote
+                    msg += "Random vote added for {} from {}.\n".format(vote.display_name, player.display_name)
+            await self.bot.say(msg)
+
+        vote_nums = {}
+        for vote in votes.values():
+            vote_nums[vote] = vote_nums.get(vote, 0) + 1
+        sorted_vote_nums = sorted(vote_nums.items(), key=operator.itemgetter(1), reverse=True)
+        top_votes = [key for key, value in sorted_vote_nums if value == sorted_vote_nums[0][1]]
+        if len(top_votes) < 2:
+            self.game.captains = top_votes
+            secondary_votes = [key for key, value in sorted_vote_nums if value == sorted_vote_nums[1][1]]
+            if len(secondary_votes) > 1:
+                await self.bot.say("{:d}-way tie for 2nd captain. Shuffling picks...".format(len(secondary_votes)))
+                random.shuffle(secondary_votes)
+            self.game.captains.append(secondary_votes[0])
+        else:
+            if len(top_votes) > 2:
+                await self.bot.say("{:d}-way tie for captains. Shuffling picks...".format(len(top_votes)))
+            random.shuffle(top_votes)
+            self.game.captains = top_votes[:2]
+
+        await self.do_picks()
+
+        self.busy = False
+
     def check_orange_first_pick_command(self, message):
         if not message.content.startswith("{prefix}pick".format(prefix=self.bot.command_prefix)):
             return False
@@ -82,6 +159,11 @@ class Teammaker:
         self.busy = True
         self.create_game()
 
+        await self.do_picks()
+
+        self.busy = False
+
+    async def do_picks(self):
         await self.bot.say("Captains: {} and {}".format(*[captain.mention for captain in self.game.captains]))
         orange_captain = self.game.captains[0]
         self.game.add_to_orange(orange_captain)
@@ -114,8 +196,6 @@ class Teammaker:
         self.game.add_to_orange(last_player)
         await self.bot.say("{} added to 🔶 ORANGE 🔶 team.".format(last_player.mention))
         await self.display_teams()
-
-        self.busy = False
 
     async def pick_orange(self, captain):
         msg = await self.bot.wait_for_message(timeout=60, author=captain, check=self.check_orange_first_pick_command)
