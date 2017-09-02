@@ -28,9 +28,6 @@ class Config:
         self.config[discord_grp][token_key] = ""
         self.config[discord_grp][prefix_key] = "!"
 
-        self.config[six_mans_grp] = {}
-        self.config[six_mans_grp][use_captains_key] = True
-
         with open(config_file, "w") as f:
             self.config.write(f)
 
@@ -41,11 +38,3 @@ class Config:
     @property
     def discord_prefix(self):
         return self.config[discord_grp][prefix_key]
-
-    @property
-    def use_captains(self):
-        return self.config[six_mans_grp][use_captains_key]
-
-    @use_captains.setter
-    def use_captains(self, value):
-        self.config[six_mans_grp][use_captains_key] = value
