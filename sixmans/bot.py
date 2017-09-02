@@ -2,9 +2,8 @@ import logging
 import sys
 import traceback
 
-from discord.ext import commands
-
 from config.config import Config
+from discord.ext import commands
 
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
