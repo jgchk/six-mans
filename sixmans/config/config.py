@@ -1,7 +1,7 @@
 import configparser
 import os
 
-config_file = "config.ini"
+config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini")
 
 discord_grp = "DISCORD"
 token_key = "Token"

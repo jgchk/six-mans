@@ -27,7 +27,7 @@ class Teammaker:
     #         self.queue.put(member)
     #     self.queue.put(ctx.message.author)
 
-    @commands.command(pass_context=True, aliases=["queue"])
+    @commands.command(pass_context=True, name="queue", aliases=["q"], description="Add yourself to the queue")
     async def q(self, ctx):
         player = ctx.message.author
 
@@ -45,7 +45,7 @@ class Teammaker:
             self.bot.say("Queue is now full! Type {prefix}captains or {prefix}random to create a game.".format(
                 prefix=self.bot.command_prefix))
 
-    @commands.command(pass_context=True, aliases=["dequeue"])
+    @commands.command(pass_context=True, name="dequeue", aliases=["dq"], description="Remove yourself from the queue")
     async def dq(self, ctx):
         player = ctx.message.author
 
@@ -56,7 +56,7 @@ class Teammaker:
         else:
             await self.bot.say("{} is not in queue.".format(player.display_name))
 
-    @commands.command()
+    @commands.command(description="Remove someone else from the queue")
     async def kick(self, player: discord.Member):
         if player in self.queue:
             self.queue.remove(player)
@@ -75,7 +75,7 @@ class Teammaker:
             return False
         return True
 
-    @commands.command()
+    @commands.command(description="Start a game by voting for captains")
     async def voting(self):
         if not self.queue_full():
             await self.bot.say("Queue is not full.")
@@ -157,7 +157,7 @@ class Teammaker:
             return False
         return True
 
-    @commands.command()
+    @commands.command(description="Start a game by randomly choosing captains")
     async def captains(self):
         if not self.queue_full():
             await self.bot.say("Queue is not full.")
@@ -235,7 +235,7 @@ class Teammaker:
                 "Timed out. Randomly picked {} and {} for 🔷 BLUE 🔷 team.".format(*[pick.mention for pick in picks]))
             return picks
 
-    @commands.command()
+    @commands.command(description="Start a game by randomly assigning teams")
     async def random(self):
         if not self.queue_full():
             await self.bot.say("Queue is not full.")
