@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-    <img src="https://cdn.rawgit.com/jgchk/six-mans/blob/master/sixmans/resources/icon.svg" alt="Six Mans" width="200">
+    <img src="https://rawgit.com/jgchk/six-mans/master/sixmans/resources/icon.svg" alt="Six Mans" width="200">
   <br>
     Six Mans
   <br>
