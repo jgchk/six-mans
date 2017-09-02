@@ -26,7 +26,7 @@ class Config:
     def create_config(self):
         self.config[discord_grp] = {}
         self.config[discord_grp][token_key] = ""
-        self.config[discord_grp][prefix_key] = "!"
+        self.config[discord_grp][prefix_key] = ">"
 
         with open(config_file, "w") as f:
             self.config.write(f)
