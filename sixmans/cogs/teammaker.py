@@ -56,6 +56,15 @@ class Teammaker:
         else:
             await self.bot.say("{} is not in queue.".format(player.display_name))
 
+    @commands.command()
+    async def kick(self, player: discord.Member):
+        if player in self.queue:
+            self.queue.remove(player)
+            await self.bot.say(
+                "{} removed from queue. ({:d}/{:d})".format(player.display_name, self.queue.qsize(), team_size))
+        else:
+            await self.bot.say("{} is not in queue.".format(player.display_name))
+
     def queue_full(self):
         return self.queue.qsize() >= team_size
 
