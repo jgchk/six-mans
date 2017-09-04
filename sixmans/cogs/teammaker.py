@@ -92,7 +92,7 @@ class Teammaker:
         await self.bot.say("Available: {}".format(", ".join([player.display_name for player in self.game.players])))
 
         votes = {}
-        timeout = 1
+        timeout = 90
         end_time = time.time() + timeout
         while len(votes) < team_size and time.time() < end_time:
             msg = await self.bot.wait_for_message(timeout=1, check=self.check_vote_command)
